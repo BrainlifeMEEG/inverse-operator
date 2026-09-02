@@ -1,4 +1,4 @@
-# app-inverse-v2
+# make inverse operator
 
 Brainlife.io app to compute the MNE inverse operator for MEG/EEG source reconstruction.
 
