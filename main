@@ -10,5 +10,5 @@ set -e
 set -x
 
 singularity exec \
-  docker://aunnikri642/app-freesurfer-mne-source-recon \
+  docker://brainlifemeeg/mne:1.12.1 \
   python3 main.py
