@@ -35,7 +35,7 @@ setup_matplotlib_backend()
 import mne
 
 # == SETUP ==
-ensure_output_dirs('out_dir', 'out_figs', 'out_report')
+ensure_output_dirs('out_dir', 'out_report')
 report_items = []
 
 # == LOAD CONFIG ==
@@ -99,15 +99,25 @@ except Exception as e:
 
 # == MAKE INVERSE OPERATOR ==
 _loose = config.get('loose')
-loose  = float(_loose) if _loose not in (None, '', 'None', 'auto') else 'auto'
+try:
+    loose = float(_loose) if _loose not in (None, '', 'None', 'auto') else 'auto'
+except (TypeError, ValueError) as e:
+    add_info_to_product(report_items, f"FATAL: Invalid 'loose' value '{_loose}': {e}", "error")
+    create_product_json(report_items)
+    sys.exit(1)
 
 _depth = config.get('depth')
-if _depth in (None, ''):
-    depth = 0.8                          # default
-elif str(_depth).lower() == 'none':
-    depth = None                         # explicit: no depth weighting
-else:
-    depth = float(_depth)
+try:
+    if _depth in (None, ''):
+        depth = 0.8                          # default
+    elif str(_depth).lower() == 'none':
+        depth = None                         # explicit: no depth weighting
+    else:
+        depth = float(_depth)
+except (TypeError, ValueError) as e:
+    add_info_to_product(report_items, f"FATAL: Invalid 'depth' value '{_depth}': {e}", "error")
+    create_product_json(report_items)
+    sys.exit(1)
 
 _rank = config.get('rank')
 if _rank in (None, '', 'None', 'auto'):
