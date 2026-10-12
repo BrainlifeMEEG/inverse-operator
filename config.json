@@ -1,0 +1,11 @@
+{
+    "forward": "",
+    "cov": "",
+    "noise_cov": "",
+    "epo": "",
+    "epochs": "",
+    "evoked": "",
+    "loose": "auto",
+    "depth": "0.8",
+    "rank": "None"
+}

@@ -34,9 +34,11 @@ from brainlife_utils import (
 setup_matplotlib_backend()
 import mne
 
+mne.set_log_level('WARNING')
+
 # == SETUP ==
 ensure_output_dirs('out_dir', 'out_report')
-report_items = []
+product_items = []
 
 # == LOAD CONFIG ==
 config = load_config()
@@ -44,16 +46,16 @@ config = load_config()
 # == LOAD FORWARD SOLUTION ==
 fwd_file = config.get('forward') or ''
 if not fwd_file or not os.path.isfile(fwd_file):
-    add_info_to_product(report_items, f"FATAL: Forward solution not found: '{fwd_file}'.", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Forward solution not found: '{fwd_file}'.", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 try:
     fwd = mne.read_forward_solution(fwd_file, verbose=True)
-    add_info_to_product(report_items, f"Forward: {fwd['nsource']} sources", "info")
+    add_info_to_product(product_items, f"Forward: {fwd['nsource']} sources", "info")
 except Exception as e:
-    add_info_to_product(report_items, f"FATAL: Could not read forward solution: {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Could not read forward solution: {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 # == LOAD NOISE COVARIANCE ==
@@ -64,16 +66,16 @@ if cov_file and not os.path.isfile(cov_file):
     if os.path.isfile(alt):
         cov_file = alt
 if not cov_file or not os.path.isfile(cov_file):
-    add_info_to_product(report_items, f"FATAL: Noise covariance not found: '{cov_file}'.", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Noise covariance not found: '{cov_file}'.", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 try:
     noise_cov = mne.read_cov(cov_file, verbose=True)
-    add_info_to_product(report_items, f"Noise covariance: {noise_cov['nfree']} degrees of freedom", "info")
+    add_info_to_product(product_items, f"Noise covariance: {noise_cov['nfree']} degrees of freedom", "info")
 except Exception as e:
-    add_info_to_product(report_items, f"FATAL: Could not read noise covariance: {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Could not read noise covariance: {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 # == LOAD SENSOR INFO ==
@@ -84,17 +86,17 @@ info = None
 try:
     if epochs_file and os.path.isfile(epochs_file):
         info = mne.read_epochs(epochs_file, preload=False).info
-        add_info_to_product(report_items, f"Sensor info from epochs: {len(info['ch_names'])} channels", "info")
+        add_info_to_product(product_items, f"Sensor info from epochs: {len(info['ch_names'])} channels", "info")
     elif evoked_file and os.path.isfile(evoked_file):
         info = mne.read_evokeds(evoked_file)[0].info
-        add_info_to_product(report_items, f"Sensor info from evoked: {len(info['ch_names'])} channels", "info")
+        add_info_to_product(product_items, f"Sensor info from evoked: {len(info['ch_names'])} channels", "info")
     else:
-        add_info_to_product(report_items, "FATAL: No sensor data found. Set 'epo' or 'evoked' in config.", "error")
-        create_product_json(report_items)
+        add_info_to_product(product_items, "FATAL: No sensor data found. Set 'epo' or 'evoked' in config.", "error")
+        create_product_json(product_items)
         sys.exit(1)
 except Exception as e:
-    add_info_to_product(report_items, f"FATAL: Could not load sensor info: {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Could not load sensor info: {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 # == MAKE INVERSE OPERATOR ==
@@ -102,8 +104,8 @@ _loose = config.get('loose')
 try:
     loose = float(_loose) if _loose not in (None, '', 'None', 'auto') else 'auto'
 except (TypeError, ValueError) as e:
-    add_info_to_product(report_items, f"FATAL: Invalid 'loose' value '{_loose}': {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Invalid 'loose' value '{_loose}': {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 _depth = config.get('depth')
@@ -115,8 +117,8 @@ try:
     else:
         depth = float(_depth)
 except (TypeError, ValueError) as e:
-    add_info_to_product(report_items, f"FATAL: Invalid 'depth' value '{_depth}': {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Invalid 'depth' value '{_depth}': {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 _rank = config.get('rank')
@@ -134,29 +136,29 @@ try:
         info, fwd, noise_cov, loose=loose, depth=depth, rank=rank, verbose=True
     )
     add_info_to_product(
-        report_items,
+        product_items,
         f"Inverse operator: loose={loose}, depth={depth}, rank={rank}",
         "info"
     )
 except Exception as e:
-    add_info_to_product(report_items, f"FATAL: make_inverse_operator failed: {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: make_inverse_operator failed: {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 # == SAVE INVERSE OPERATOR ==
 inv_path = os.path.join('out_dir', 'inv.fif')
 try:
     mne.minimum_norm.write_inverse_operator(inv_path, inverse_operator, overwrite=True)
-    add_info_to_product(report_items, f"Saved: {inv_path}", "info")
+    add_info_to_product(product_items, f"Saved: {inv_path}", "info")
 except Exception as e:
-    add_info_to_product(report_items, f"FATAL: Could not save inverse operator: {e}", "error")
-    create_product_json(report_items)
+    add_info_to_product(product_items, f"FATAL: Could not save inverse operator: {e}", "error")
+    create_product_json(product_items)
     sys.exit(1)
 
 # == SAVE REPORT ==
 report = mne.Report(title='Inverse Operator Report')
 report.save(os.path.join('out_report', 'report.html'), overwrite=True)
 
-add_info_to_product(report_items, "Inverse operator computed successfully.", "success")
-create_product_json(report_items)
+add_info_to_product(product_items, "Inverse operator computed successfully.", "success")
+create_product_json(product_items)
 print("Done.")
