@@ -47,6 +47,7 @@ config = load_config()
 fwd_file = config.get('forward') or ''
 if not fwd_file or not os.path.isfile(fwd_file):
     add_info_to_product(product_items, f"FATAL: Forward solution not found: '{fwd_file}'.", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -55,6 +56,7 @@ try:
     add_info_to_product(product_items, f"Forward: {fwd['nsource']} sources", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not read forward solution: {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -67,6 +69,7 @@ if cov_file and not os.path.isfile(cov_file):
         cov_file = alt
 if not cov_file or not os.path.isfile(cov_file):
     add_info_to_product(product_items, f"FATAL: Noise covariance not found: '{cov_file}'.", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -75,6 +78,7 @@ try:
     add_info_to_product(product_items, f"Noise covariance: {noise_cov['nfree']} degrees of freedom", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not read noise covariance: {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -92,10 +96,12 @@ try:
         add_info_to_product(product_items, f"Sensor info from evoked: {len(info['ch_names'])} channels", "info")
     else:
         add_info_to_product(product_items, "FATAL: No sensor data found. Set 'epo' or 'evoked' in config.", "error")
+        print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
         create_product_json(product_items)
         sys.exit(1)
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not load sensor info: {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -105,6 +111,7 @@ try:
     loose = float(_loose) if _loose not in (None, '', 'None', 'auto') else 'auto'
 except (TypeError, ValueError) as e:
     add_info_to_product(product_items, f"FATAL: Invalid 'loose' value '{_loose}': {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -118,6 +125,7 @@ try:
         depth = float(_depth)
 except (TypeError, ValueError) as e:
     add_info_to_product(product_items, f"FATAL: Invalid 'depth' value '{_depth}': {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -142,6 +150,7 @@ try:
     )
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: make_inverse_operator failed: {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
@@ -152,6 +161,7 @@ try:
     add_info_to_product(product_items, f"Saved: {inv_path}", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not save inverse operator: {e}", "error")
+    print(f"ERROR: {product_items[-1]['msg']}", file=sys.stderr)
     create_product_json(product_items)
     sys.exit(1)
 
