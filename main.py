@@ -52,7 +52,7 @@ if not fwd_file or not os.path.isfile(fwd_file):
     sys.exit(1)
 
 try:
-    fwd = mne.read_forward_solution(fwd_file, verbose=True)
+    fwd = mne.read_forward_solution(fwd_file)
     add_info_to_product(product_items, f"Forward: {fwd['nsource']} sources", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not read forward solution: {e}", "error")
@@ -74,7 +74,7 @@ if not cov_file or not os.path.isfile(cov_file):
     sys.exit(1)
 
 try:
-    noise_cov = mne.read_cov(cov_file, verbose=True)
+    noise_cov = mne.read_cov(cov_file)
     add_info_to_product(product_items, f"Noise covariance: {noise_cov['nfree']} degrees of freedom", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not read noise covariance: {e}", "error")
@@ -141,7 +141,7 @@ else:
 
 try:
     inverse_operator = mne.minimum_norm.make_inverse_operator(
-        info, fwd, noise_cov, loose=loose, depth=depth, rank=rank, verbose=True
+        info, fwd, noise_cov, loose=loose, depth=depth, rank=rank
     )
     add_info_to_product(
         product_items,
@@ -158,6 +158,10 @@ except Exception as e:
 inv_path = os.path.join('out_dir', 'inv.fif')
 try:
     mne.minimum_norm.write_inverse_operator(inv_path, inverse_operator, overwrite=True)
+    # Spec requires the written file to load with its MNE reader before
+    # success is reported, so a truncated or corrupt write fails here
+    # rather than three apps downstream.
+    mne.minimum_norm.read_inverse_operator(inv_path)
     add_info_to_product(product_items, f"Saved: {inv_path}", "info")
 except Exception as e:
     add_info_to_product(product_items, f"FATAL: Could not save inverse operator: {e}", "error")
@@ -167,7 +171,13 @@ except Exception as e:
 
 # == SAVE REPORT ==
 report = mne.Report(title='Inverse Operator Report')
-report.save(os.path.join('out_report', 'report.html'), overwrite=True)
+# A failed report must not cost us product.json: the real output is
+# already on disk by this point, and an unguarded failure here would
+# exit with a bare traceback and no diagnostics at all.
+try:
+    report.save(os.path.join('out_report', 'report.html'), overwrite=True)
+except Exception as e:
+    add_info_to_product(product_items, f"Could not save HTML report: {e}", "warning")
 
 add_info_to_product(product_items, "Inverse operator computed successfully.", "success")
 create_product_json(product_items)
