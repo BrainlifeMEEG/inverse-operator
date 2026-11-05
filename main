@@ -9,6 +9,6 @@
 set -e
 set -x
 
-singularity exec \
+singularity --silent exec \
   docker://brainlifemeeg/mne:1.12.1 \
   python3 main.py
