@@ -1,5 +1,49 @@
 # Make Inverse Operator
 
+<!-- brainlife-app:begin (generated from the App manifest; edit the manifest, not this block) -->
+
+> **Computes an MNE minimum-norm inverse operator for MEG/EEG source reconstruction from a forward solution, a noise covariance and sensor info from epochs, using MNE-Python.**
+
+Combines a precomputed forward solution and a noise covariance with the channel layout and projectors of an epochs (or evoked) file in mne.minimum_norm.make_inverse_operator, and saves inv.fif with an HTML report. Use it between the forward/covariance Apps and source estimation. loose, depth and rank are passed to make_inverse_operator.
+
+| | |
+|---|---|
+| 📥 **Inputs** | `neuro/meeg/mne/forward-inverse` · `neuro/meeg/mne/covariance` · `neuro/meeg/mne/epochs` |
+| 📤 **Outputs** | `neuro/meeg/mne/forward-inverse` |
+| 🐳 **Container** | `brainlifemeeg/mne:1.12.1` |
+| ⚙️ **Resources** | 1 CPUs · 20 GB memory · 1 h walltime |
+| 🔗 **Run it** | [doi.org/10.25663/brainlife.app.905](https://doi.org/10.25663/brainlife.app.905) |
+
+#### 📥 Inputs
+
+| Input | Datatype | Required | Description |
+|---|---|---|---|
+| `forward` | `neuro/meeg/mne/forward-inverse` | yes | Forward solution (fwd.fif). |
+| `noise_cov` | `neuro/meeg/mne/covariance` | yes | Noise covariance matrix (cov.fif). |
+| `epo` | `neuro/meeg/mne/epochs` | yes | Epoched data used only for sensor information (channels, projectors). |
+
+#### 📤 Outputs
+
+| Output | Datatype | Description |
+|---|---|---|
+| `out_dir` | `neuro/meeg/mne/forward-inverse` | Inverse operator (inv.fif). |
+
+<details>
+<summary><b>⚙️ Parameters</b> (3)</summary>
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `loose` | string | `auto` | Loose orientation constraint passed to make_inverse_operator ('auto' or a value from 0 to 1). |
+| `depth` | string | `0.8` | Depth weighting exponent passed to make_inverse_operator. |
+| `rank` | string | `None` | Data rank passed to make_inverse_operator (None estimates it). |
+
+</details>
+
+📚 **References used by this App:**
+- Gramfort A, et al. MEG and EEG data analysis with MNE-Python. Front Neurosci 7(267):1-13 (2013). [doi:10.3389/fnins.2013.00267](https://doi.org/10.3389/fnins.2013.00267)
+
+<!-- brainlife-app:end -->
+
 [![Run on Brainlife.io](https://img.shields.io/badge/Brainlife-bl.app.905-blue.svg)](https://doi.org/10.25663/brainlife.app.905)
 
 ## Description
